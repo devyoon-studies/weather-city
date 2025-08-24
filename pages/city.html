@@ -8,7 +8,25 @@
     </head>
     <body>
         <div class="container">
-            <div class="scroll-container">
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState">
+                <div class="center-content">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">날씨 정보를 불러오는 중...</div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="error-state" id="errorState" style="display: none;">
+                <div class="center-content">
+                    <div class="error-text">날씨 정보를 불러오는데 실패했습니다.</div>
+                    <button class="retry-button" onclick="requestWeatherData()">다시 시도</button>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content" id="content" style="display: none;">
+                <div class="scroll-container">
                 <!-- Header -->
                 <div class="header">
                     <h1 class="city-name" id="cityName">강남구</h1>
@@ -74,157 +92,301 @@
             </div>
         </div>
 
-        <script>
-            // URL 파라미터에서 도시 이름 가져오기
-            function getCityFromURL() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const cityParam = urlParams.get("city");
-                return cityParam ? decodeURIComponent(cityParam) : "강남구";
+        <style>
+            /* 로딩 상태 스타일 */
+            .loading-state, .error-state {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1000;
             }
 
-            // 도시별 샘플 데이터
-            const cityData = {
-                강남구: {
-                    name: "강남구",
-                    nameEn: "Gangnam-gu",
-                    temp: 33,
-                    description: "맑음",
-                    icon: "☀️",
-                    min: 26,
-                    max: 33,
-                    feelsLike: 40,
-                    humidity: 59,
-                    pressure: 1011,
-                    windSpeed: 3.2,
-                    visibility: 10.0,
-                },
-                종로구: {
-                    name: "종로구",
-                    nameEn: "Jongno-gu",
-                    temp: 32,
-                    description: "구름조금",
-                    icon: "⛅",
-                    min: 25,
-                    max: 32,
-                    feelsLike: 38,
-                    humidity: 62,
-                    pressure: 1012,
-                    windSpeed: 2.8,
-                    visibility: 9.5,
-                },
-                중구: {
-                    name: "중구",
-                    nameEn: "Jung-gu",
-                    temp: 31,
-                    description: "흐림",
-                    icon: "☁️",
-                    min: 24,
-                    max: 31,
-                    feelsLike: 36,
-                    humidity: 65,
-                    pressure: 1010,
-                    windSpeed: 2.1,
-                    visibility: 8.2,
-                },
-                용산구: {
-                    name: "용산구",
-                    nameEn: "Yongsan-gu",
-                    temp: 30,
-                    description: "구름많음",
-                    icon: "☁️",
-                    min: 23,
-                    max: 30,
-                    feelsLike: 35,
-                    humidity: 68,
-                    pressure: 1009,
-                    windSpeed: 1.9,
-                    visibility: 7.8,
-                },
-                성동구: {
-                    name: "성동구",
-                    nameEn: "Seongdong-gu",
-                    temp: 29,
-                    description: "비",
-                    icon: "🌧️",
-                    min: 22,
-                    max: 29,
-                    feelsLike: 33,
-                    humidity: 75,
-                    pressure: 1008,
-                    windSpeed: 4.1,
-                    visibility: 6.5,
-                },
-            };
+            .loading-spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #007AFF;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 16px;
+            }
 
-            // 페이지 로드 시 실행
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .retry-button {
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 16px;
+                margin-top: 16px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .retry-button:hover {
+                background: #0056CC;
+            }
+
+            /* 날씨 아이콘 스타일 개선 */
+            .weather-icon {
+                font-size: 24px !important;
+                margin-top: 8px !important;
+            }
+
+            /* 온도에 따른 색상 */
+            .temp-hot { color: #ff6b6b; }
+            .temp-warm { color: #ffa726; }
+            .temp-cool { color: #42a5f5; }
+            .temp-cold { color: #5c6bc0; }
+        </style>
+
+        <script>
+            // 페이지 상태 관리
+            let currentWeatherData = null;
+            let isLoading = true;
+
+            // 페이지 초기화
             document.addEventListener("DOMContentLoaded", function () {
-                const cityName = getCityFromURL();
-                const data = cityData[cityName] || cityData["강남구"];
-
-                // 데이터 업데이트
-                document.getElementById("cityName").textContent = data.name;
-                document.getElementById("cityNameEn").textContent = data.nameEn;
-                document.getElementById("currentTemp").textContent =
-                    data.temp + "°";
-                document.getElementById("weatherDescription").textContent =
-                    data.description;
-                document.getElementById("weatherIcon").textContent = data.icon;
-                document.getElementById(
-                    "minMaxText"
-                ).textContent = `최고 ${data.max}° / 최저 ${data.min}°`;
-                document.getElementById("feelsLike").textContent =
-                    data.feelsLike + "°C";
-                document.getElementById("humidity").textContent =
-                    data.humidity + "%";
-                document.getElementById("pressure").textContent =
-                    data.pressure + " hPa";
-                document.getElementById("windSpeed").textContent =
-                    data.windSpeed + " m/s";
-                document.getElementById("visibility").textContent =
-                    data.visibility + " km";
-
-                // 페이지 타이틀 업데이트
-                document.title = `서울 날씨 - ${data.name}`;
+                console.log("City weather page loaded, waiting for data...");
+                showLoading();
+                
+                // React Native에게 데이터 요청
+                requestWeatherData();
             });
 
-            // React Native WebView에서 호출할 수 있는 함수들
-            window.updateWeatherData = function (newData) {
-                if (newData.temp)
-                    document.getElementById("currentTemp").textContent =
-                        newData.temp + "°";
-                if (newData.description)
-                    document.getElementById("weatherDescription").textContent =
-                        newData.description;
-                if (newData.icon)
-                    document.getElementById("weatherIcon").textContent =
-                        newData.icon;
-                if (newData.min && newData.max) {
-                    document.getElementById(
-                        "minMaxText"
-                    ).textContent = `최고 ${newData.max}° / 최저 ${newData.min}°`;
+            // 로딩 상태 표시
+            function showLoading() {
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('errorState').style.display = 'none';
+                document.getElementById('content').style.display = 'none';
+                isLoading = true;
+            }
+
+            // 에러 상태 표시
+            function showError() {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                document.getElementById('content').style.display = 'none';
+                isLoading = false;
+            }
+
+            // 컨텐츠 표시
+            function showContent() {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                isLoading = false;
+            }
+
+            // React Native에 날씨 데이터 요청
+            function requestWeatherData() {
+                console.log("Requesting weather data from React Native...");
+                showLoading();
+                
+                // React Native에 메시지 전송
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'REQUEST_WEATHER_DATA'
+                    }));
+                } else {
+                    console.log("ReactNativeWebView not available, using sample data");
+                    // 웹 브라우저에서 테스트할 때 샘플 데이터 사용
+                    setTimeout(() => {
+                        const sampleData = {
+                            cityName: '강남구',
+                            cityNameEn: 'Gangnam-gu',
+                            currentWeather: {
+                                main: {
+                                    temp: 33.24,
+                                    feels_like: 39.77,
+                                    humidity: 59,
+                                    pressure: 1011
+                                },
+                                weather: [{
+                                    description: '맑음',
+                                    icon: '01d'
+                                }],
+                                wind: {
+                                    speed: 3.2
+                                },
+                                visibility: 10000
+                            },
+                            todayMinMax: {
+                                min: 26.38,
+                                max: 33.24
+                            }
+                        };
+                        handleWeatherDataReceived(sampleData);
+                    }, 1000);
                 }
-                if (newData.feelsLike)
-                    document.getElementById("feelsLike").textContent =
-                        newData.feelsLike + "°C";
-                if (newData.humidity)
-                    document.getElementById("humidity").textContent =
-                        newData.humidity + "%";
-                if (newData.pressure)
-                    document.getElementById("pressure").textContent =
-                        newData.pressure + " hPa";
-                if (newData.windSpeed)
-                    document.getElementById("windSpeed").textContent =
-                        newData.windSpeed + " m/s";
-                if (newData.visibility)
-                    document.getElementById("visibility").textContent =
-                        newData.visibility + " km";
+            }
+
+            // 날씨 아이콘 매핑
+            function getWeatherIcon(iconCode) {
+                const iconMap = {
+                    '01d': '☀️', '01n': '🌙',
+                    '02d': '⛅', '02n': '☁️',
+                    '03d': '☁️', '03n': '☁️',
+                    '04d': '☁️', '04n': '☁️',
+                    '09d': '🌧️', '09n': '🌧️',
+                    '10d': '🌦️', '10n': '🌧️',
+                    '11d': '⛈️', '11n': '⛈️',
+                    '13d': '❄️', '13n': '❄️',
+                    '50d': '🌫️', '50n': '🌫️'
+                };
+                return iconMap[iconCode] || '🌤️';
+            }
+
+            // 온도에 따른 클래스 반환
+            function getTemperatureClass(temp) {
+                if (temp >= 30) return 'temp-hot';
+                if (temp >= 20) return 'temp-warm';
+                if (temp >= 10) return 'temp-cool';
+                return 'temp-cold';
+            }
+
+            // React Native에서 날씨 데이터를 받았을 때 처리
+            function handleWeatherDataReceived(data) {
+                console.log("Weather data received:", data);
+                currentWeatherData = data;
+
+                try {
+                    updateUI(data);
+                    showContent();
+                } catch (error) {
+                    console.error("Error updating UI:", error);
+                    showError();
+                }
+            }
+
+            // UI 업데이트
+            function updateUI(data) {
+                // 도시 정보 업데이트
+                if (data.cityName) {
+                    document.getElementById("cityName").textContent = data.cityName;
+                    document.title = `서울 날씨 - ${data.cityName}`;
+                }
+                if (data.cityNameEn) {
+                    document.getElementById("cityNameEn").textContent = data.cityNameEn;
+                }
+
+                const currentWeather = data.currentWeather;
+                if (currentWeather) {
+                    // 현재 온도
+                    if (currentWeather.main && currentWeather.main.temp) {
+                        const temp = Math.round(currentWeather.main.temp);
+                        const tempElement = document.getElementById("currentTemp");
+                        tempElement.textContent = temp + "°";
+                        tempElement.className = `current-temperature ${getTemperatureClass(temp)}`;
+                    }
+
+                    // 날씨 설명 및 아이콘
+                    if (currentWeather.weather && currentWeather.weather[0]) {
+                        const weather = currentWeather.weather[0];
+                        document.getElementById("weatherDescription").textContent = weather.description || '';
+                        document.getElementById("weatherIcon").textContent = getWeatherIcon(weather.icon);
+                    }
+
+                    // 최고/최저 온도
+                    if (data.todayMinMax) {
+                        const minTemp = Math.round(data.todayMinMax.min);
+                        const maxTemp = Math.round(data.todayMinMax.max);
+                        document.getElementById("minMaxText").textContent = `최고 ${maxTemp}° / 최저 ${minTemp}°`;
+                    }
+
+                    // 상세 정보
+                    if (currentWeather.main) {
+                        if (currentWeather.main.feels_like) {
+                            document.getElementById("feelsLike").textContent = 
+                                Math.round(currentWeather.main.feels_like) + "°C";
+                        }
+                        if (currentWeather.main.humidity) {
+                            document.getElementById("humidity").textContent = 
+                                currentWeather.main.humidity + "%";
+                        }
+                        if (currentWeather.main.pressure) {
+                            document.getElementById("pressure").textContent = 
+                                currentWeather.main.pressure + " hPa";
+                        }
+                    }
+
+                    if (currentWeather.wind && currentWeather.wind.speed) {
+                        document.getElementById("windSpeed").textContent = 
+                            currentWeather.wind.speed + " m/s";
+                    }
+
+                    if (currentWeather.visibility) {
+                        document.getElementById("visibility").textContent = 
+                            (currentWeather.visibility / 1000).toFixed(1) + " km";
+                    }
+                }
+            }
+
+            // React Native WebView 메시지 리스너
+            window.addEventListener('message', function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("Received message:", data);
+                    
+                    switch(data.type) {
+                        case 'WEATHER_DATA':
+                            handleWeatherDataReceived(data.payload);
+                            break;
+                        case 'ERROR':
+                            console.error("Error from React Native:", data.payload);
+                            showError();
+                            break;
+                        default:
+                            console.log("Unknown message type:", data.type);
+                    }
+                } catch (error) {
+                    console.error("Error parsing message:", error);
+                }
+            });
+
+            // 전역 함수들 (backward compatibility)
+            window.updateWeatherData = function(newData) {
+                console.log("updateWeatherData called with:", newData);
+                handleWeatherDataReceived({
+                    currentWeather: {
+                        main: {
+                            temp: newData.temp,
+                            feels_like: newData.feelsLike,
+                            humidity: newData.humidity,
+                            pressure: newData.pressure
+                        },
+                        weather: [{
+                            description: newData.description,
+                            icon: newData.icon
+                        }],
+                        wind: {
+                            speed: newData.windSpeed
+                        },
+                        visibility: newData.visibility * 1000
+                    },
+                    todayMinMax: {
+                        min: newData.min,
+                        max: newData.max
+                    }
+                });
             };
 
-            window.updateCityInfo = function (cityName, cityNameEn) {
+            window.updateCityInfo = function(cityName, cityNameEn) {
+                console.log("updateCityInfo called:", cityName, cityNameEn);
                 document.getElementById("cityName").textContent = cityName;
                 document.getElementById("cityNameEn").textContent = cityNameEn;
                 document.title = `서울 날씨 - ${cityName}`;
             };
+
+            // 에러 시 React Native에 재시도 요청
+            window.retryWeatherData = requestWeatherData;
         </script>
     </body>
 </html>

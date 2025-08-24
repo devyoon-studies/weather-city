@@ -32,41 +32,190 @@ web/
 ### React Native WebView에서 사용
 
 ```javascript
-import { WebView } from 'react-native-webview';
+import React, { useRef, useEffect } from "react";
+import { WebView } from "react-native-webview";
 
-// 빈 페이지
-<WebView source={{ uri: 'file:///path/to/web/pages/empty.html' }} />
+const CityWeatherWebView = ({ cityData }) => {
+    const webViewRef = useRef(null);
 
-// 도시 페이지
-<WebView source={{ uri: 'file:///path/to/web/pages/city.html?city=강남구' }} />
+    // WebView에 날씨 데이터 전송
+    const sendWeatherData = (data) => {
+        if (webViewRef.current) {
+            webViewRef.current.postMessage(
+                JSON.stringify({
+                    type: "WEATHER_DATA",
+                    payload: data,
+                })
+            );
+        }
+    };
+
+    // 날씨 데이터가 변경되면 WebView로 전송
+    useEffect(() => {
+        if (cityData) {
+            sendWeatherData(cityData);
+        }
+    }, [cityData]);
+
+    // WebView에서 메시지를 받을 때 처리
+    const handleMessage = (event) => {
+        try {
+            const message = JSON.parse(event.nativeEvent.data);
+
+            if (message.type === "REQUEST_WEATHER_DATA") {
+                // WebView에서 데이터를 요청하면 현재 데이터 전송
+                sendWeatherData(cityData);
+            }
+        } catch (error) {
+            console.error("WebView message parsing error:", error);
+        }
+    };
+
+    return (
+        <WebView
+            ref={webViewRef}
+            source={{ uri: "file:///path/to/web/pages/city.html" }}
+            onMessage={handleMessage}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+        />
+    );
+};
+
+// 사용 예시
+const App = () => {
+    const weatherData = {
+        cityName: "강남구",
+        cityNameEn: "Gangnam-gu",
+        currentWeather: {
+            main: {
+                temp: 33.24,
+                feels_like: 39.77,
+                humidity: 59,
+                pressure: 1011,
+            },
+            weather: [
+                {
+                    description: "맑음",
+                    icon: "01d",
+                },
+            ],
+            wind: {
+                speed: 3.2,
+            },
+            visibility: 10000,
+        },
+        todayMinMax: {
+            min: 26.38,
+            max: 33.24,
+        },
+    };
+
+    return <CityWeatherWebView cityData={weatherData} />;
+};
 ```
 
-### JavaScript 인터페이스
+### 데이터 구조
 
-도시 페이지는 React Native에서 호출할 수 있는 함수들을 제공합니다:
+WebView로 전송하는 날씨 데이터는 다음 구조를 따릅니다:
 
 ```javascript
-// 날씨 데이터 업데이트
+{
+    type: 'WEATHER_DATA',
+    payload: {
+        cityName: '강남구',           // 도시 이름 (한글)
+        cityNameEn: 'Gangnam-gu',     // 도시 이름 (영어)
+        currentWeather: {
+            main: {
+                temp: 33.24,           // 현재 온도
+                feels_like: 39.77,     // 체감온도
+                humidity: 59,          // 습도 (%)
+                pressure: 1011         // 기압 (hPa)
+            },
+            weather: [{
+                description: '맑음',   // 날씨 설명
+                icon: '01d'            // 날씨 아이콘 코드
+            }],
+            wind: {
+                speed: 3.2             // 풍속 (m/s)
+            },
+            visibility: 10000          // 가시거리 (미터)
+        },
+        todayMinMax: {
+            min: 26.38,               // 오늘 최저온도
+            max: 33.24                // 오늘 최고온도
+        }
+    }
+}
+```
+
+### 메시지 통신
+
+WebView와 React Native 간의 양방향 통신:
+
+#### React Native → WebView
+
+```javascript
+// 날씨 데이터 전송
 webViewRef.current.postMessage(
     JSON.stringify({
-        action: "updateWeather",
-        data: {
-            temp: 35,
-            description: "맑음",
-            humidity: 60,
-            // ... 기타 데이터
+        type: "WEATHER_DATA",
+        payload: {
+            cityName: "강남구",
+            currentWeather: {
+                /* ... */
+            },
+            todayMinMax: {
+                /* ... */
+            },
         },
     })
 );
 
-// 도시 정보 업데이트
+// 에러 전송
 webViewRef.current.postMessage(
     JSON.stringify({
-        action: "updateCity",
-        cityName: "강남구",
-        cityNameEn: "Gangnam-gu",
+        type: "ERROR",
+        payload: {
+            message: "날씨 데이터를 불러올 수 없습니다",
+        },
     })
 );
+```
+
+#### WebView → React Native
+
+```javascript
+// WebView에서 데이터 요청
+window.ReactNativeWebView.postMessage(
+    JSON.stringify({
+        type: "REQUEST_WEATHER_DATA",
+    })
+);
+```
+
+### 이전 버전과의 호환성
+
+기존의 함수 호출 방식도 여전히 지원합니다:
+
+```javascript
+// 직접 함수 호출 (이전 방식)
+webViewRef.current.injectJavaScript(`
+    window.updateWeatherData({
+        temp: 35,
+        description: '맑음',
+        humidity: 60,
+        pressure: 1010,
+        windSpeed: 3.2,
+        visibility: 10.0,
+        min: 26,
+        max: 35,
+        feelsLike: 40,
+        icon: 'sunny'
+    });
+    true;
+`);
 ```
 
 ## GitHub Pages 배포
