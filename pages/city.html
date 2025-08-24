@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>서울 날씨 - 강남구</title>
+        <link rel="stylesheet" href="../css/common.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="scroll-container">
+                <!-- Header -->
+                <div class="header">
+                    <h1 class="city-name" id="cityName">강남구</h1>
+                    <p class="city-name-en" id="cityNameEn">Gangnam-gu</p>
+                </div>
+
+                <!-- Current Weather -->
+                <div class="current-weather-section">
+                    <div class="temperature-container">
+                        <div class="current-temperature" id="currentTemp">
+                            33°
+                        </div>
+                        <div class="weather-info">
+                            <div
+                                class="weather-description"
+                                id="weatherDescription"
+                            >
+                                맑음
+                            </div>
+                            <div class="weather-icon" id="weatherIcon">☀️</div>
+                        </div>
+                    </div>
+
+                    <!-- Min/Max Temperature -->
+                    <div class="min-max-container">
+                        <div class="min-max-text" id="minMaxText">
+                            최고 33° / 최저 26°
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Weather Details -->
+                <div class="details-section">
+                    <h2 class="section-title">상세 정보</h2>
+
+                    <div class="detail-row">
+                        <span class="detail-label">체감온도</span>
+                        <span class="detail-value" id="feelsLike">40°C</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">습도</span>
+                        <span class="detail-value" id="humidity">59%</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">기압</span>
+                        <span class="detail-value" id="pressure">1011 hPa</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">풍속</span>
+                        <span class="detail-value" id="windSpeed">3.2 m/s</span>
+                    </div>
+
+                    <div class="detail-row">
+                        <span class="detail-label">가시거리</span>
+                        <span class="detail-value" id="visibility"
+                            >10.0 km</span
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // URL 파라미터에서 도시 이름 가져오기
+            function getCityFromURL() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const cityParam = urlParams.get("city");
+                return cityParam ? decodeURIComponent(cityParam) : "강남구";
+            }
+
+            // 도시별 샘플 데이터
+            const cityData = {
+                강남구: {
+                    name: "강남구",
+                    nameEn: "Gangnam-gu",
+                    temp: 33,
+                    description: "맑음",
+                    icon: "☀️",
+                    min: 26,
+                    max: 33,
+                    feelsLike: 40,
+                    humidity: 59,
+                    pressure: 1011,
+                    windSpeed: 3.2,
+                    visibility: 10.0,
+                },
+                종로구: {
+                    name: "종로구",
+                    nameEn: "Jongno-gu",
+                    temp: 32,
+                    description: "구름조금",
+                    icon: "⛅",
+                    min: 25,
+                    max: 32,
+                    feelsLike: 38,
+                    humidity: 62,
+                    pressure: 1012,
+                    windSpeed: 2.8,
+                    visibility: 9.5,
+                },
+                중구: {
+                    name: "중구",
+                    nameEn: "Jung-gu",
+                    temp: 31,
+                    description: "흐림",
+                    icon: "☁️",
+                    min: 24,
+                    max: 31,
+                    feelsLike: 36,
+                    humidity: 65,
+                    pressure: 1010,
+                    windSpeed: 2.1,
+                    visibility: 8.2,
+                },
+                용산구: {
+                    name: "용산구",
+                    nameEn: "Yongsan-gu",
+                    temp: 30,
+                    description: "구름많음",
+                    icon: "☁️",
+                    min: 23,
+                    max: 30,
+                    feelsLike: 35,
+                    humidity: 68,
+                    pressure: 1009,
+                    windSpeed: 1.9,
+                    visibility: 7.8,
+                },
+                성동구: {
+                    name: "성동구",
+                    nameEn: "Seongdong-gu",
+                    temp: 29,
+                    description: "비",
+                    icon: "🌧️",
+                    min: 22,
+                    max: 29,
+                    feelsLike: 33,
+                    humidity: 75,
+                    pressure: 1008,
+                    windSpeed: 4.1,
+                    visibility: 6.5,
+                },
+            };
+
+            // 페이지 로드 시 실행
+            document.addEventListener("DOMContentLoaded", function () {
+                const cityName = getCityFromURL();
+                const data = cityData[cityName] || cityData["강남구"];
+
+                // 데이터 업데이트
+                document.getElementById("cityName").textContent = data.name;
+                document.getElementById("cityNameEn").textContent = data.nameEn;
+                document.getElementById("currentTemp").textContent =
+                    data.temp + "°";
+                document.getElementById("weatherDescription").textContent =
+                    data.description;
+                document.getElementById("weatherIcon").textContent = data.icon;
+                document.getElementById(
+                    "minMaxText"
+                ).textContent = `최고 ${data.max}° / 최저 ${data.min}°`;
+                document.getElementById("feelsLike").textContent =
+                    data.feelsLike + "°C";
+                document.getElementById("humidity").textContent =
+                    data.humidity + "%";
+                document.getElementById("pressure").textContent =
+                    data.pressure + " hPa";
+                document.getElementById("windSpeed").textContent =
+                    data.windSpeed + " m/s";
+                document.getElementById("visibility").textContent =
+                    data.visibility + " km";
+
+                // 페이지 타이틀 업데이트
+                document.title = `서울 날씨 - ${data.name}`;
+            });
+
+            // React Native WebView에서 호출할 수 있는 함수들
+            window.updateWeatherData = function (newData) {
+                if (newData.temp)
+                    document.getElementById("currentTemp").textContent =
+                        newData.temp + "°";
+                if (newData.description)
+                    document.getElementById("weatherDescription").textContent =
+                        newData.description;
+                if (newData.icon)
+                    document.getElementById("weatherIcon").textContent =
+                        newData.icon;
+                if (newData.min && newData.max) {
+                    document.getElementById(
+                        "minMaxText"
+                    ).textContent = `최고 ${newData.max}° / 최저 ${newData.min}°`;
+                }
+                if (newData.feelsLike)
+                    document.getElementById("feelsLike").textContent =
+                        newData.feelsLike + "°C";
+                if (newData.humidity)
+                    document.getElementById("humidity").textContent =
+                        newData.humidity + "%";
+                if (newData.pressure)
+                    document.getElementById("pressure").textContent =
+                        newData.pressure + " hPa";
+                if (newData.windSpeed)
+                    document.getElementById("windSpeed").textContent =
+                        newData.windSpeed + " m/s";
+                if (newData.visibility)
+                    document.getElementById("visibility").textContent =
+                        newData.visibility + " km";
+            };
+
+            window.updateCityInfo = function (cityName, cityNameEn) {
+                document.getElementById("cityName").textContent = cityName;
+                document.getElementById("cityNameEn").textContent = cityNameEn;
+                document.title = `서울 날씨 - ${cityName}`;
+            };
+        </script>
+    </body>
+</html>

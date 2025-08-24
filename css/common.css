@@ -1,0 +1,183 @@
+/* 공통 스타일 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
+    color: #333;
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: white;
+    overflow-y: auto;
+}
+
+.scroll-container {
+    padding: 20px;
+}
+
+.center-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    text-align: center;
+}
+
+.error-text {
+    font-size: 16px;
+    color: red;
+    text-align: center;
+}
+
+.loading-text {
+    font-size: 16px;
+    color: #666;
+    text-align: center;
+}
+
+/* 헤더 스타일 */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.city-name {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+}
+
+.city-name-en {
+    font-size: 18px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* 현재 날씨 섹션 */
+.current-weather-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.temperature-container {
+    text-align: center;
+}
+
+.current-temperature {
+    font-size: 80px;
+    font-weight: 300;
+    color: #333;
+    line-height: 1;
+}
+
+.weather-info {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.weather-description {
+    font-size: 20px;
+    color: #666;
+}
+
+.weather-icon {
+    font-size: 14px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.min-max-container {
+    margin-top: 20px;
+}
+
+.min-max-text {
+    font-size: 18px;
+    color: #666;
+}
+
+/* 상세 정보 섹션 */
+.details-section {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 16px;
+    color: #666;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* 빈 페이지 스타일 */
+.empty-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+}
+
+.empty-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.empty-description {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+    .current-temperature {
+        font-size: 60px;
+    }
+
+    .city-name {
+        font-size: 28px;
+    }
+
+    .scroll-container {
+        padding: 16px;
+    }
+}
